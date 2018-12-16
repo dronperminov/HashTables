@@ -23,13 +23,14 @@ class DoubleHashingTable : public HashTable<K, T> {
     };
 
     int capacity; // ёмкость таблицы
+    int size; // число элементов в таблице
     HashNode *cells; // массив ячеек
 
     int (*h1)(K); // указатель на первую хеш-функцию
     int (*h2)(K); // указатель на вторую хеш-функцию
 
 public:
-    DoubleHashingTable(int size, int (*h1)(K), int (*h2)(K)); // конструктор из размера и хеш-функций
+    DoubleHashingTable(int tableSize, int (*h1)(K), int (*h2)(K)); // конструктор из размера и хеш-функций
     DoubleHashingTable(const DoubleHashingTable& table); // конструктор копирования
 
     void Insert(const K& key, const T& value); // добавление значения по ключу
@@ -50,12 +51,13 @@ public:
 
 // конструктор из размера и хеш-функции
 template <typename K, typename T>
-DoubleHashingTable<K, T>::DoubleHashingTable(int size, int (*h1)(K), int (*h2)(K)) {
-	capacity = size; // запоминаем в ёмкости переданный размер
-	cells = new HashNode[size]; // выделяем память под массив пар
+DoubleHashingTable<K, T>::DoubleHashingTable(int tableSize, int (*h1)(K), int (*h2)(K)) {
+	capacity = tableSize; // запоминаем в ёмкости переданный размер
+	size = 0; // изначально нет элементов
+	cells = new HashNode[tableSize]; // выделяем память под ячейки
 
 	// делаем все ячейки свободными
-	for (int i = 0; i < size; i++)
+	for (int i = 0; i < tableSize; i++)
 		cells[i].state = FREE;
 
 	this->h1 = h1; // запоминаем указатель на первую функцию
@@ -65,7 +67,8 @@ DoubleHashingTable<K, T>::DoubleHashingTable(int size, int (*h1)(K), int (*h2)(K
 // конструктор копирования
 template <typename K, typename T>
 DoubleHashingTable<K, T>::DoubleHashingTable(const DoubleHashingTable& table) {
-	capacity = table.capacity; // запоминаем ёмкость
+	capacity = table.capacity; // копируем ёмкость
+	size = table.size; // копируем количество элементов
 	cells = new HashNode[capacity]; // выделяем память под массив
 
 	h1 = table.h1; // копируем указатель на первую функцию
@@ -93,6 +96,8 @@ void DoubleHashingTable<K, T>::Insert(const K& key, const T& value) {
 			cells[index].key = key; // сохраняем ключ
 			cells[index].value = value; // сохраняем значение
 			cells[index].state = BUSY; // ячейка становится занятой
+
+			size++; // увеличиваем счётчик числа элементов
 			return; // выходим
 		}
 
@@ -116,6 +121,8 @@ bool DoubleHashingTable<K, T>::Remove(const K& key) {
 		// если нашли занятую нужным ключом ячейку
 		if (cells[index].state == BUSY && cells[index].key == key) {
 			cells[index].state = REMOVED; // помечаем её как удалённую
+			size--; // уменьшаем счётчик числа элементов
+
 			return true; // возвращаем истину
 		}
 
@@ -157,27 +164,18 @@ template <typename K, typename T>
 void DoubleHashingTable<K, T>::Clear() {
 	for (int i = 0; i < capacity; i++)
 		cells[i].state = FREE;
+
+	size = 0; // обнуляем счётчик числа элементов
 }
 
 template <typename K, typename T>
 int DoubleHashingTable<K, T>::GetSize() const {
-	int size = 0; // обнуляем размер
-
-	// проходимся по всем ячейкам
-	for (int i = 0; i < capacity; i++)
-		if (cells[i].state == BUSY) // если ячейка занята
-			size++; // увеличиваем размер на 1
-
-	return size; // возвращаем найденный размер
+	return size; // возвращаем размер
 }
 
 template <typename K, typename T>
 bool DoubleHashingTable<K, T>::IsEmpty() const {
-	for (int i = 0; i < capacity; i++)
-		if (cells[i].state == BUSY)
-			return false; // если хотя бы одна ячейка занята, значит таблица не пуста
-
-	return true; // таблица пуста
+	return size == 0; // таблица пуста, если нет элементов
 }
 
 // получение значения по ключу

@@ -19,12 +19,14 @@ class SeparateChainingTable : public HashTable<K, T> {
     };
 
     int capacity; // ёмкость таблицы
+    int size; // число элементов в таблице
     Node **cells; // массив ячеек (списков)
 
     int (*h)(K); // указатель на хеш-функцию
 
+
 public:
-    SeparateChainingTable(int size, int (*h)(K)); // конструктор из размера и хеш-функции
+    SeparateChainingTable(int tableSize, int (*h)(K)); // конструктор из размера и хеш-функции
     SeparateChainingTable(const SeparateChainingTable& table); // конструктор копирования
 
     void Insert(const K& key, const T& value); // добавление значения по ключу
@@ -45,12 +47,13 @@ public:
 
 // конструктор из размера и хеш-функции
 template <typename K, typename T>
-SeparateChainingTable<K, T>::SeparateChainingTable(int size, int (*h)(K)) {
-	capacity = size; // запоминаем в ёмкости переданный размер
-	cells = new Node*[size]; // выделяем память под массив списков
+SeparateChainingTable<K, T>::SeparateChainingTable(int tableSize, int (*h)(K)) {
+	capacity = tableSize; // запоминаем в ёмкости переданный размер
+	size = 0; // изначально нет элементов
+	cells = new Node*[tableSize]; // выделяем память под массив списков
 
 	// обнуляем все списки
-	for (int i = 0; i < size; i++)
+	for (int i = 0; i < tableSize; i++)
 		cells[i] = nullptr;
 
 	this->h = h; // запоминаем указатель на хеш-функцию
@@ -59,8 +62,9 @@ SeparateChainingTable<K, T>::SeparateChainingTable(int size, int (*h)(K)) {
 // конструктор копирования
 template <typename K, typename T>
 SeparateChainingTable<K, T>::SeparateChainingTable(const SeparateChainingTable& table) {
-	capacity = table.capacity;
-	cells = new Node*[capacity];
+	capacity = table.capacity; // копируем ёмкость
+	size = table.size; // копируем количество элементов
+	cells = new Node*[capacity]; // выделяем память под ячейки
 
 	h = table.h; // копируем указатель на функцию
 
@@ -100,6 +104,8 @@ void SeparateChainingTable<K, T>::Insert(const K& key, const T& value) {
 	node->next = cells[index]; // следующий элемент будет первый в списке
 
 	cells[index] = node; // вставляем в начало списка для быстродействия
+
+	size++; // увеличиваем счётчик числа элементов
 }
 
 // удаление по ключу
@@ -130,6 +136,8 @@ bool SeparateChainingTable<K, T>::Remove(const K& key) {
 
 	delete node; // удаляем элемент списка из памяти
 
+	size--; // уменьшаем счётчик числа элементов
+
 	return true; // удалили, возвращаем истину
 }
 
@@ -157,35 +165,20 @@ void SeparateChainingTable<K, T>::Clear() {
 			delete node; // удаляем элемент
 		}
 	}
+
+	size = 0; // обнуляем счётчик числа элементов
 }
 
 // получение размера
 template <typename K, typename T>
 int SeparateChainingTable<K, T>::GetSize() const {
-	int size = 0; // обнуляем размер
-
-	// проходимся по всем ячейкам
-	for (int i = 0; i < capacity; i++) {
-		Node *node = cells[i]; // получаем указатель на начало списка
-
-		// проходимся по всему списку
-		while (node) {
-			size++; // увеличиваем размер
-			node = node->next; // переходим к следующему элементу
-		}
-	}
-
-	return size; // возвращаем найденный размер
+	return size; // возвращаем размер
 }
 
 // проверка на пустоту
 template <typename K, typename T>
 bool SeparateChainingTable<K, T>::IsEmpty() const {
-	for (int i = 0; i < capacity; i++)
-		if (cells[i])
-			return false; // если хотя бы один список не пуст, значит таблица не пуста
-
-	return true; // таблица пуста
+	return size == 0; // таблица пуста, если нет элементов
 }
 
 // получение значения по ключу
