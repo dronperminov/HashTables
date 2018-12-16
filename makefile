@@ -6,3 +6,6 @@ tests:
 
 menu:
 	$(compiler) $(flags) menu.cpp -o menu
+
+perfomance:
+	$(compiler) $(flags) perfomance.cpp -o perfomance
