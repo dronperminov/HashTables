@@ -52,9 +52,9 @@ public:
 // конструктор из размера и хеш-функции
 template <typename K, typename T>
 DoubleHashingTable<K, T>::DoubleHashingTable(int tableSize, int (*h1)(K), int (*h2)(K)) {
-	capacity = tableSize; // запоминаем в ёмкости переданный размер
-	size = 0; // изначально нет элементов
-	cells = new HashNode[tableSize]; // выделяем память под ячейки
+	this->capacity = tableSize; // запоминаем в ёмкости переданный размер
+	this->size = 0; // изначально нет элементов
+	this->cells = new HashNode[tableSize]; // выделяем память под ячейки
 
 	// делаем все ячейки свободными
 	for (int i = 0; i < tableSize; i++)

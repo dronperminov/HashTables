@@ -137,11 +137,15 @@ void Tests(HashTable<int, string> *table, string description) {
 int main() {
 	HashTable<int, string> *chaining = new SeparateChainingTable<int, string>(100, GetHash);
 	HashTable<int, string> *linear = new LinearProbingTable<int, string>(100, GetHash);
+	HashTable<int, string> *linear4 = new LinearProbingTable<int, string>(100, GetHash, 4);
+	HashTable<int, string> *linear2 = new LinearProbingTable<int, string>(100, GetHash, 2);
 	HashTable<int, string> *quadratic = new QuadraticProbingTable<int, string>(100, GetHash);
 	HashTable<int, string> *doubleHashing = new DoubleHashingTable<int, string>(100, GetHash, GetHash2);
 
 	Tests(chaining, "Tests for table with separate chaining method");
 	Tests(linear, "Tests for table with linear probing method");
+	Tests(linear2, "Tests for table with linear probing method (q = 2)");
+	Tests(linear4, "Tests for table with linear probing method (q = 4)");
 	Tests(quadratic, "Tests for table with quadratic probing method");
 	Tests(doubleHashing, "Tests for table with double hashing method");
 }

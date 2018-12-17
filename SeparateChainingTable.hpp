@@ -20,10 +20,10 @@ class SeparateChainingTable : public HashTable<K, T> {
 
     int capacity; // ёмкость таблицы
     int size; // число элементов в таблице
+
     Node **cells; // массив ячеек (списков)
 
     int (*h)(K); // указатель на хеш-функцию
-
 
 public:
     SeparateChainingTable(int tableSize, int (*h)(K)); // конструктор из размера и хеш-функции
@@ -48,9 +48,10 @@ public:
 // конструктор из размера и хеш-функции
 template <typename K, typename T>
 SeparateChainingTable<K, T>::SeparateChainingTable(int tableSize, int (*h)(K)) {
-	capacity = tableSize; // запоминаем в ёмкости переданный размер
-	size = 0; // изначально нет элементов
-	cells = new Node*[tableSize]; // выделяем память под массив списков
+	this->capacity = tableSize; // запоминаем в ёмкости переданный размер
+	this->size = 0; // изначально нет элементов
+
+	this->cells = new Node*[tableSize]; // выделяем память под массив списков
 
 	// обнуляем все списки
 	for (int i = 0; i < tableSize; i++)
@@ -95,7 +96,7 @@ SeparateChainingTable<K, T>::SeparateChainingTable(const SeparateChainingTable& 
 // // добавление значения по ключу
 template <typename K, typename T>
 void SeparateChainingTable<K, T>::Insert(const K& key, const T& value) {
-	int index = h(key); // получаем индекс для вставки
+	int index = h(key) % capacity; // получаем индекс для вставки
 
 	Node *node = new Node; // создаём новый элемент
 
@@ -111,7 +112,7 @@ void SeparateChainingTable<K, T>::Insert(const K& key, const T& value) {
 // удаление по ключу
 template <typename K, typename T>
 bool SeparateChainingTable<K, T>::Remove(const K& key) {
-	int index = h(key); // получаем индекс списка по ключу
+	int index = h(key) % capacity; // получаем индекс списка по ключу
 
 	Node *node = cells[index]; // первый элемент списка
 	Node *prev = nullptr; // предыдущий элемент
@@ -144,7 +145,7 @@ bool SeparateChainingTable<K, T>::Remove(const K& key) {
 // поиск по ключу
 template <typename K, typename T>
 bool SeparateChainingTable<K, T>::Find(const K& key) const {
-	int index = h(key); // получаем индекс ячейки по ключу
+	int index = h(key) % capacity; // получаем индекс ячейки по ключу
 
 	Node *node = cells[index]; // запоминаем элемент списка
 
@@ -184,7 +185,7 @@ bool SeparateChainingTable<K, T>::IsEmpty() const {
 // получение значения по ключу
 template <typename K, typename T>
 T SeparateChainingTable<K, T>::Get(const K& key) const {
-	int index = h(key); // получаем индекс по ключу
+	int index = h(key) % capacity; // получаем индекс по ключу
 
 	Node *node = cells[index];
 

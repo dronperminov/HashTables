@@ -24,12 +24,14 @@ class LinearProbingTable : public HashTable<K, T> {
 
     int capacity; // ёмкость таблицы
     int size; // число элементов в таблице
+    int q; // шаг пробирования
+
     HashNode *cells; // массив ячеек
 
     int (*h)(K); // указатель на хеш-функцию
 
 public:
-    LinearProbingTable(int tableSize, int (*h)(K)); // конструктор из размера и хеш-функции
+    LinearProbingTable(int tableSize, int (*h)(K), int q = 1); // конструктор из размера, хеш-функции и шага пробирования
     LinearProbingTable(const LinearProbingTable& table); // конструктор копирования
 
     void Insert(const K& key, const T& value); // добавление значения по ключу
@@ -48,12 +50,14 @@ public:
     ~LinearProbingTable(); // деструктор (освобождение памяти)
 };
 
-// конструктор из размера и хеш-функции
+// конструктор из размера, хеш-функции и шага пробирования
 template <typename K, typename T>
-LinearProbingTable<K, T>::LinearProbingTable(int tableSize, int (*h)(K)) {
-	capacity = tableSize; // запоминаем в ёмкости переданный размер
-	size = 0; // изначально нет элементов
-	cells = new HashNode[tableSize]; // выделяем память под ячейки
+LinearProbingTable<K, T>::LinearProbingTable(int tableSize, int (*h)(K), int q) {
+	this->capacity = tableSize; // запоминаем в ёмкости переданный размер
+	this->size = 0; // изначально нет элементов
+	this->q = q;
+
+	this->cells = new HashNode[tableSize]; // выделяем память под ячейки
 
 	// делаем все ячейки свободными
 	for (int i = 0; i < tableSize; i++)
@@ -67,6 +71,8 @@ template <typename K, typename T>
 LinearProbingTable<K, T>::LinearProbingTable(const LinearProbingTable& table) {
 	capacity = table.capacity; // копируем ёмкость
 	size = table.size; // копируем количество элементов
+	q = table.q; // копируем шаг пробирования
+
 	cells = new HashNode[capacity]; // выделяем память под массив
 
 	h = table.h; // копируем указатель на функцию
@@ -86,7 +92,7 @@ void LinearProbingTable<K, T>::Insert(const K& key, const T& value) {
 	int hash = h(key); // получаем хеш от ключа
 
 	while (sequenceLength < capacity) {
-		int index = (hash + sequenceLength) % capacity;
+		int index = (hash + sequenceLength * q) % capacity;
 
 		if (cells[index].state != BUSY) { // если нашли незанятую ячейку
 			cells[index].key = key; // сохраняем ключ
@@ -111,7 +117,7 @@ bool LinearProbingTable<K, T>::Remove(const K& key) {
 	int hash = h(key); // получаем хеш от ключа
 
 	while (sequenceLength < capacity) {
-		int index = (hash + sequenceLength) % capacity;
+		int index = (hash + sequenceLength * q) % capacity;
 
 		// если нашли занятую нужным ключом ячейку
 		if (cells[index].state == BUSY && cells[index].key == key) {
@@ -138,7 +144,7 @@ bool LinearProbingTable<K, T>::Find(const K& key) const {
 	int hash = h(key); // получаем хеш от ключа
 
 	while (sequenceLength < capacity) {
-		int index = (hash + sequenceLength) % capacity; // ищем индекс элемента
+		int index = (hash + sequenceLength * q) % capacity; // ищем индекс элемента
 
 		// если нашли занятую клетку с нужным ключом
 		if (cells[index].state == BUSY && cells[index].key == key)
@@ -179,7 +185,7 @@ T LinearProbingTable<K, T>::Get(const K& key) const {
 	int hash = h(key); // получаем хеш от ключа
 
 	while (sequenceLength < capacity) {
-		int index = (hash + sequenceLength) % capacity; // ищем индекс элемента
+		int index = (hash + sequenceLength * q) % capacity; // ищем индекс элемента
 
 		// если нашли занятую клетку с нужным ключом
 		if (cells[index].state == BUSY && cells[index].key == key)
